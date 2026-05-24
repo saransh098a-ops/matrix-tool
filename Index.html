@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Matrix Overclocked Companion</title>
+    <style>
+        body { background: #121212; color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #1e1e1e; padding: 10px 15px; border-bottom: 1px solid #333; font-weight: bold; }
+        .hide-panel-btn { background: transparent; color: #aaa; border: none; font-size: 12px; cursor: pointer; }
+        #controlPanel { position: sticky; top: 0; z-index: 1000; background: #121212; padding: 8px; border-bottom: 2px solid #444; box-shadow: 0 4px 6px rgba(0,0,0,0.6); }
+        .tabs-container { display: flex; overflow-x: auto; gap: 5px; margin-bottom: 10px; padding-bottom: 2px; align-items: center; }
+        .tab-btn { background: #333; color: white; border: 1px solid #555; padding: 12px 10px; border-radius: 5px; font-weight: bold; flex: 1; min-width: 90px; text-align: center; cursor: pointer; text-transform: capitalize; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .tab-btn.active { background: #ff4500; border-color: #ff4500; }
+        .btn-green-outline { background: #1b5e20; color: #4caf50; border: 1px solid #4caf50; }
+        .move-arrow { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #ffcc00; font-size: 12px; user-select: none; }
+        .move-arrow:active { background: rgba(0,0,0,0.8); transform: scale(1.1); }
+        .delete-tab-btn { background: #d32f2f; color: white; margin-left: 4px; }
+        .code-row { display: flex; gap: 5px; margin-bottom: 10px; align-items: stretch; background: #222; padding: 5px; border-radius: 5px; }
+        #masterCode { flex-grow: 1; font-size: 16px; padding: 10px; font-weight: bold; background: transparent; color: #fff; border: none; border-left: 2px solid #ffcc00; outline: none; }
+        .btn-clear { background: #d32f2f; color: white; border: none; width: 40px; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 18px;}
+        .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; background: #1a1a1a; padding: 8px 12px; border-radius: 5px; border: 1px solid #333; }
+        .slider-label { font-size: 11px; font-weight: bold; color: #ffcc00; white-space: nowrap; }
+        .matrix-slider { flex-grow: 1; height: 6px; background: #444; border-radius: 3px; outline: none; -webkit-appearance: none; }
+        .matrix-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #00c853; cursor: pointer; box-shadow: 0 0 5px #00c853; }
+        .slider-value { font-size: 12px; font-weight: bold; color: #00ff66; min-width: 35px; text-align: right; font-family: monospace; }
+        .main-controls { display: flex; gap: 5px; margin-bottom: 10px; }
+        .control-btn { background: #333; color: #aaa; border: 1px solid #444; padding: 12px 5px; border-radius: 5px; font-weight: bold; flex: 1; cursor: pointer; font-size: 14px; }
+        #autoBtn { color: #00c853; border-color: #00c853; }
+        .btn-paste { color: #ffeb3b; border-color: #ffeb3b; font-weight: bold; }
+        .btn-fire { background: #d30000; color: white; border: 1px solid #ff0000; flex: 1.5; font-size: 16px; }
+        .jumper-strip { display: flex; overflow-x: auto; gap: 4px; padding: 4px 0 8px 0; margin-bottom: 5px; border-bottom: 1px solid #222; }
+        .jumper-strip::-webkit-scrollbar { display: none; }
+        .jump-dot { background: #222; color: #888; border: 1px solid #333; padding: 5px 10px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; font-family: monospace; min-width: 28px; text-align: center; }
+        .jump-dot:active { background: #ff4500; color: #fff; border-color: #ff4500; }
+        .matrix-curtain-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .curtain-master-btn { border: 1px dashed #555; padding: 10px 5px; font-weight: bold; border-radius: 4px; flex: 1; cursor: pointer; font-size: 13px; color: #fff; }
+        .bg-dark-black { background: #000; color: #ff3333; border-color: #ff3333; }
+        .bg-light-green { background: #1b5e20; color: #00ff66; border-color: #00ff66; }
+        .global-ram-master-row { display: flex; gap: 5px; margin-bottom: 10px; }
+        .ram-master-btn { background: #01579b; color: #00b0ff; border: 1px solid #00b0ff; padding: 10px 5px; font-weight: bold; border-radius: 4px; flex: 1; cursor: pointer; font-size: 13px; }
+        .ram-master-btn.strip-all { background: #e65100; color: #ffb74d; border-color: #ffb74d; }
+        .sub-actions { display: flex; gap: 5px; margin-bottom: 5px; }
+        .sub-btn { border: none; padding: 8px 5px; font-weight: bold; border-radius: 4px; color: white; flex: 1; cursor: pointer; font-size: 12px; }
+        .bg-blue { background: #2962ff; } .bg-cyan { background: #00b8d4; } .bg-purple { background: #6200ea; } .bg-orange { background: #ff6d00; }
+        .manage-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .bg-green-full { background: #00c853; flex: 3; }
+        #all-grids { display: flex; flex-direction: column; width: 100%; box-sizing: border-box; }
+        #addIdSection { display: none; flex-direction: column; gap: 5px; margin-bottom: 10px; background: #222; padding: 8px; border-radius: 5px; }
+        .input-box { padding: 8px; border-radius: 4px; border: none; font-weight: bold; width: 95%; background: #333; color: #fff; margin-bottom: 5px; }
+        .add-btn { background: #00c853; color: white; font-weight: bold; border: none; padding: 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+        .power-grid-title { font-size: 12px; color: #ffcc00; font-weight: bold; margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px; }
+        .power-matrix-box { display: flex; flex-direction: column; gap: 5px; background: #111; padding: 6px; border-radius: 4px; max-height: 120px; overflow-y: auto; }
+        .power-matrix-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 6px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .power-switch-btn { border: none; padding: 4px 10px; font-weight: bold; border-radius: 3px; cursor: pointer; font-size: 11px; color: white; }
+        .power-switch-btn.active-on { background: #00c853; } .power-switch-btn.active-off { background: #757575; }
+        .router-title { font-size: 12px; color: #00ff66; font-weight: bold; margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px; }
+        .router-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
+        .router-select { background: #333; color: #fff; padding: 7px; border-radius: 4px; border: none; font-weight: bold; }
+        .router-list { display: flex; flex-direction: column; gap: 4px; background: #111; padding: 5px; border-radius: 4px; max-height: 100px; overflow-y: auto; font-family: monospace; font-size: 11px; }
+        .router-item { display: flex; justify-content: space-between; background: #222; padding: 4px 8px; border-radius: 3px; align-items: center; }
+        .del-route-btn { color: #ff3333; cursor: pointer; font-weight: bold; font-size: 12px; padding: 0 4px; }
+        .server-url-row { display: flex; align-items: center; gap: 6px; background: #0a1a0a; border: 1px solid #00c853; border-radius: 5px; padding: 7px 10px; margin-bottom: 10px; }
+        .server-url-label { font-size: 11px; color: #00ff66; font-weight: bold; white-space: nowrap; }
+        #railwayUrlInput { flex-grow: 1; background: transparent; border: none; color: #fff; font-size: 12px; font-weight: bold; outline: none; font-family: monospace; }
+        .server-status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; flex-shrink: 0; }
+        .server-status-dot.online { background: #00c853; box-shadow: 0 0 6px #00c853; }
+        .server-status-dot.offline { background: #ff3333; box-shadow: 0 0 6px #ff3333; }
+        .grid { display: flex; flex-direction: column; gap: 15px; padding: 10px; padding-bottom: 80px; visibility: hidden; position: absolute; top: -9999px; left: -9999px; width: 100%; box-sizing: border-box; }
+        .grid.active-matrix { visibility: visible; position: relative; top: 0; left: 0; display: flex; }
+        .iframe-container { border: 2px solid #333; border-radius: 5px; background: #111; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .id-header { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 8px 10px; border-bottom: 1px solid #222;}
+        .id-title { color: #ffeb3b; font-weight: bold; font-size: 15px; }
+        .ui-toggle-btn { background: #4caf50; color: white; border: none; padding: 5px 8px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-right: 3px; font-size: 11px; }
+        .ram-toggle-btn { background: #0288d1; color: white; border: none; padding: 5px 8px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-right: 5px; font-size: 11px; }
+        .ram-toggle-btn.ram-stripped { background: #e65100; color: #ffcc80; }
+        .refresh-single { background: #1976d2; color: white; border: none; padding: 5px 10px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .reload-inplace-btn { background: #e6c300; color: #000; border: none; padding: 5px 10px; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px; }
+        .id-creds { padding: 10px; background: #151515; font-size: 13px; color: #aaa; border-bottom: 1px solid #222;}
+        .cred-input { background: transparent; border: none; color: white; font-weight: bold; font-size: 13px; outline: none; width: 60%; }
+        .frame-wrapper { display: flex; flex-grow: 1; height: 420px; position: relative; background: #000; }
+        .drag-handle { width: 30px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; color: #666; font-size: 11px; font-weight: bold; writing-mode: vertical-rl; text-orientation: upright; border-right: 1px solid #222; z-index: 10; }
+        iframe { flex-grow: 1; border: none; background: #fff; height: 100%; }
+        .black-curtain { position: absolute; top: 0; left: 30px; right: 0; bottom: 0; background: #000; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #444; font-family: monospace; font-size: 12px; border-left: 1px solid #222; }
+        .black-curtain span { color: #00ff66; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .black-curtain p { margin: 0; font-size: 11px; color: #666; }
+        .iframe-container.ui-active .black-curtain { opacity: 0; pointer-events: none; visibility: hidden; }
+        .tabs-container::-webkit-scrollbar { display: none; }
+    </style>
+  </head>
+  <body>
+<div class="top-bar">
+    <span>Matrix Core — Railway Edition</span>
+    <button class="hide-panel-btn" onclick="togglePanel()">HIDE PANEL △</button>
+</div>
+<div id="controlPanel">
+    <div class="server-url-row">
+        <span class="server-url-label">🛰️ SERVER:</span>
+        <input type="text" id="railwayUrlInput" placeholder="https://your-app.up.railway.app" oninput="saveRailwayUrl()">
+        <div class="server-status-dot" id="serverDot"></div>
+    </div>
+    <div class="tabs-container" id="tabsBox"></div>
+    <div class="code-row">
+        <input type="text" id="masterCode" placeholder="Enter Gift Code">
+        <button class="btn-clear" onclick="clearCode()">X</button>
+    </div>
+    <div class="slider-row">
+        <span class="slider-label">⚡ BURST LOOP MULTIPLIER:</span>
+        <input type="range" id="burstMultiplier" class="matrix-slider" min="1" max="5" value="1" oninput="updateSliderDisplay(this.value)">
+        <span class="slider-value" id="sliderValDisplay">100x</span>
+    </div>
+    <div class="main-controls">
+        <button class="control-btn" id="autoBtn" onclick="toggleAuto()">AUTO: ON</button>
+        <button class="control-btn btn-paste" onclick="pasteCode()">PASTE</button>
+        <button class="control-btn btn-fire" onclick="fireAll()">Fire 🔥</button>
+    </div>
+    <div class="jumper-strip" id="quickJumperBox"></div>
+    <div class="matrix-curtain-row">
+        <button class="curtain-master-btn bg-dark-black" onclick="setGlobalCurtainState(true)">⚫ BLACK ALL</button>
+        <button class="curtain-master-btn bg-light-green" onclick="setGlobalCurtainState(false)">🟢 SHOW ALL UI</button>
+    </div>
+    <div class="global-ram-master-row">
+        <button class="ram-master-btn strip-all" onclick="setGlobalRamFreeState(true)">⚡ RAM-FREE ALL</button>
+        <button class="ram-master-btn" onclick="setGlobalRamFreeState(false)">🔓 FULL UI ALL</button>
+    </div>
+    <div class="sub-actions">
+        <button class="sub-btn bg-blue"   onclick="broadcastCmd('LOGIN_ALL')">Login All</button>
+        <button class="sub-btn bg-cyan"   onclick="refreshAllCurrent()">Refresh All</button>
+        <button class="sub-btn bg-purple" onclick="goToGiftPage()">Gift Page</button>
+        <button class="sub-btn bg-orange" onclick="goToAccountPage()">Account Page</button>
+    </div>
+    <div class="manage-row">
+        <button class="sub-btn bg-green-full" onclick="toggleAddId()">Manage Game URLs & IDs</button>
+    </div>
+    <div id="addIdSection">
+        <label style="font-size:11px;color:#ffeb3b;font-weight:bold;">1. Main Base URL:</label>
+        <input type="text" id="gameBaseUrlInput" class="input-box" placeholder="https://gameclub.com/#/home">
+        <label style="font-size:11px;color:#ffeb3b;font-weight:bold;">2. Gift Page Path:</label>
+        <input type="text" id="gameGiftUrlInput" class="input-box" placeholder="/#/pages/person/gift_code">
+        <label style="font-size:11px;color:#ffeb3b;font-weight:bold;">3. Account Page Path:</label>
+        <input type="text" id="gameAccountUrlInput" class="input-box" placeholder="/#/pages/person/index">
+        <label style="font-size:11px;color:#00ff66;font-weight:bold;margin-top:5px;">4. Add Credentials:</label>
+        <textarea id="bulkCreds" class="input-box" rows="4" placeholder="Format: Phone Password" style="background:#111;font-family:monospace;resize:vertical;"></textarea>
+        <div class="power-grid-title">🔌 GAME ACTIVATION MATRIX</div>
+        <div class="power-matrix-box" id="powerMatrixControlBox"></div>
+        <div class="router-title">⭐ TELEGRAM ROUTING GRID</div>
+        <div class="router-row">
+            <input type="text" id="channelRouteInput" style="padding:7px;background:#333;color:white;border:none;border-radius:4px;font-weight:bold;flex:1;" placeholder="Channel Username">
+            <span style="font-size:11px;font-weight:bold;color:#aaa;">➔</span>
+            <select id="targetGameSelector" class="router-select"></select>
+            <button type="button" onclick="addChannelRoute()" style="background:#00b8d4;color:white;border:none;padding:7px 12px;font-weight:bold;border-radius:4px;">LINK</button>
+        </div>
+        <div class="router-list" id="activeRoutesBox"></div>
+        <button class="add-btn" onclick="processManagementPanel()">Save Configurations</button>
+    </div>
+</div>
+<div id="all-grids"></div>
+
+<script id="injector-src" type="text/injector">
+(function() {
+    const urlMatch = window.location.href.match(/[#&?]subId=(\d+)/);
+    if (!urlMatch) return;
+    const subId = urlMatch[1];
+    const suffix = '_sub_' + subId;
+    const lG = localStorage.getItem.bind(localStorage);
+    const lS = localStorage.setItem.bind(localStorage);
+    const lR = localStorage.removeItem.bind(localStorage);
+    localStorage.getItem    = function(k) { return lG(k + suffix); };
+    localStorage.setItem    = function(k, v) { lS(k + suffix, v); };
+    localStorage.removeItem = function(k) { lR(k + suffix); };
+    const sG = sessionStorage.getItem.bind(sessionStorage);
+    const sS = sessionStorage.setItem.bind(sessionStorage);
+    const sR = sessionStorage.removeItem.bind(sessionStorage);
+    sessionStorage.getItem    = function(k) { return sG(k + suffix); };
+    sessionStorage.setItem    = function(k, v) { sS(k + suffix, v); };
+    sessionStorage.removeItem = function(k) { sR(k + suffix); };
+})();
+function forceClearInput(el) {
+    if (!el) return;
+    try {
+        const ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        ns.call(el, '');
+        el.dispatchEvent(new Event('input',  { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch(e) {}
+}
+function executeLoginFormInject(phone, pass) {
+    const pI = document.querySelector('input[type="tel"],input[placeholder*="phone"],input[placeholder*="mobile"],input[placeholder*="\u624b\u673a"]');
+    const wI = document.querySelector('input[type="password"],input[placeholder*="pass"],input[placeholder*="\u5bc6\u7801"]');
+    const ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    if (pI && phone) { ns.call(pI, phone); pI.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (wI && pass)  { ns.call(wI, pass);  wI.dispatchEvent(new Event('input', { bubbles: true })); }
+    setTimeout(() => {
+        const els = document.querySelectorAll('button,.van-button,div,span');
+        for (let i = 0; i < els.length; i++) {
+            const t = (els[i].textContent || '').trim().toLowerCase();
+            if ((t === 'login' || t === 'log in' || t === '\u767b\u5f55' || t === '\u786e\u5b9a') && els[i].offsetParent !== null) {
+                els[i].click();
+                const p = els[i].closest('button') || els[i].closest('.van-button');
+                if (p) p.click(); break;
+            }
+        }
+    }, 150);
+}
+function checkAndClickConfirm() {
+    const xp = "//*[contains(translate(text(),'CONFIRM','confirm'),'confirm')]|//*[contains(text(),'\u786e\u5b9a')]|//*[contains(text(),'Ok')]|//*[contains(text(),'OK')]";
+    const ns = document.evaluate(xp, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+    for (let i = 0; i < ns.snapshotLength; i++) {
+        const b = ns.snapshotItem(i);
+        if (b.offsetParent !== null) {
+            b.click();
+            if (b.parentElement) b.parentElement.click();
+            const r = b.closest('button') || b.closest('.van-button') || b.closest('.btn');
+            if (r) r.click();
+        }
+    }
+    ['.van-dialog__confirm','.van-button--normal','.dialog-confirm-btn','.confirm-btn','.dialog-ok'].forEach(s => {
+        const el = document.querySelector(s);
+        if (el && el.offsetParent !== null) el.click();
+    });
+}
+window.addEventListener('DOMContentLoaded', () => {
+    if (!window.location.href.includes('subId=')) return;
+    setTimeout(() => {
+        const ph = sessionStorage.getItem('pending_auto_phone');
+        const pw = sessionStorage.getItem('pending_auto_pass');
+        if (ph && pw) {
+            sessionStorage.removeItem('pending_auto_phone');
+            sessionStorage.removeItem('pending_auto_pass');
+            executeLoginFormInject(ph, pw);
+        }
+    }, 400);
+});
+setInterval(() => {
+    const code = sessionStorage.getItem('pending_autoshift_code');
+    if (!code) return;
+    const gi = document.querySelector('input[placeholder*="gift"],input[placeholder*="Gift"],input[placeholder*="code"],input[placeholder*="\u7801"]');
+    const btn = document.evaluate("//*[contains(text(),'Receive')]|//*[contains(text(),'Claim')]|//*[contains(text(),'Exchange')]|//*[contains(text(),'Submit')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    if (gi && btn) {
+        sessionStorage.removeItem('pending_autoshift_code');
+        const ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+        ns.call(gi, code); gi.dispatchEvent(new Event('input', { bubbles: true }));
+        btn.click();
+        let n = 0;
+        const t = setInterval(() => { checkAndClickConfirm(); forceClearInput(gi); if (++n >= 100) clearInterval(t); }, 20);
+    }
+}, 100);
+window.addEventListener('message', function(e) {
+    if (!e.data) return;
+    if (e.data.cmd === 'LOGIN' || e.data.cmd === 'LOGIN_ALL') {
+        if (e.data.phone && e.data.pass) {
+            sessionStorage.setItem('pending_auto_phone', e.data.phone);
+            sessionStorage.setItem('pending_auto_pass',  e.data.pass);
+        }
+        executeLoginFormInject(e.data.phone, e.data.pass);
+    }
+    if (e.data.cmd === 'FIRE') {
+        const gi = document.querySelector('input[placeholder*="gift"],input[placeholder*="Gift"],input[placeholder*="code"],input[placeholder*="\u7801"]');
+        if (!gi && e.data.giftUrl) { sessionStorage.setItem('pending_autoshift_code', e.data.code); window.location.href = e.data.giftUrl; return; }
+        const btn = document.evaluate("//*[contains(text(),'Receive')]|//*[contains(text(),'Claim')]|//*[contains(text(),'Exchange')]|//*[contains(text(),'Submit')]", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        if (gi && btn) {
+            const ns = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+            ns.call(gi, e.data.code); gi.dispatchEvent(new Event('input', { bubbles: true }));
+            btn.click();
+            let n = 0;
+            const t = setInterval(() => { checkAndClickConfirm(); forceClearInput(gi); if (++n >= 100) clearInterval(t); }, 20);
+        }
+    }
+    if (e.data.cmd === 'PING') window.parent.postMessage({ cmd: 'PONG', index: e.data.index }, '*');
+});
+  <script>
+    const INJECTOR_CODE = document.getElementById('injector-src').textContent;
+    function injectIntoFrame(frame) {
+        try {
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            const s = doc.createElement('script'); s.textContent = INJECTOR_CODE;
+            (doc.head || doc.documentElement).appendChild(s);
+        } catch(e) {}
+    }
+
+    let RAILWAY_URL = localStorage.getItem('railwayServerUrl') || '';
+    function saveRailwayUrl() {
+        RAILWAY_URL = document.getElementById('railwayUrlInput').value.trim().replace(/\/$/, '');
+        localStorage.setItem('railwayServerUrl', RAILWAY_URL);
+    }
+    async function pingServer() {
+        const dot = document.getElementById('serverDot');
+        if (!RAILWAY_URL) { dot.className = 'server-status-dot offline'; return; }
+        try {
+            const r = await fetch(RAILWAY_URL + '/', { signal: AbortSignal.timeout(3000) });
+            dot.className = r.ok ? 'server-status-dot online' : 'server-status-dot offline';
+        } catch(e) { dot.className = 'server-status-dot offline'; }
+    }
+    setInterval(pingServer, 5000);
+
+    let tabNames       = JSON.parse(localStorage.getItem('autoClaimerTabs')) || ['Raja', 'Jaiclub'];
+    let currentTab     = localStorage.getItem('activeAutoClaimerTab') || tabNames[0];
+    if (!tabNames.includes(currentTab)) currentTab = tabNames[0];
+    let gameData       = {};
+    let channelRoutes  = JSON.parse(localStorage.getItem('matrixChannelRoutes')) || {};
+    let tabPowerStates = JSON.parse(localStorage.getItem('matrixTabPowerStates')) || {};
+    let internalLock   = false;
+    let activeBurstMultiplierValue = 1;
+
+    function updateSliderDisplay(val) {
+        activeBurstMultiplierValue = parseInt(val);
+        document.getElementById('sliderValDisplay').innerText = (activeBurstMultiplierValue * 100) + 'x';
+    }
+    function initData() {
+        tabNames.forEach(tab => {
+            if (tabPowerStates[tab] === undefined) tabPowerStates[tab] = true;
+            const saved = localStorage.getItem('rajaAccounts_' + tab);
+            const parsed = JSON.parse(saved) || [];
+            gameData[tab] = parsed.map(i => ({ phone: i.phone || '', pass: i.pass || '' }));
+            localStorage.setItem('rajaAccounts_' + tab, JSON.stringify(gameData[tab]));
+        });
+        localStorage.setItem('matrixTabPowerStates', JSON.stringify(tabPowerStates));
+    }
+    initData();
+
+    function renderTabs() {
+        const box = document.getElementById('tabsBox'); box.innerHTML = '';
+        tabNames.forEach(tab => {
+            const btn = document.createElement('button');
+            btn.className = 'tab-btn' + (tab === currentTab ? ' active' : '');
+            const prefix = tabPowerStates[tab] ? '' : '🛑 ';
+            if (tab === currentTab) {
+                const L = document.createElement('span'); L.className = 'move-arrow'; L.innerText = '◀'; L.onclick = e => { e.stopPropagation(); moveTab(tab,-1); };
+                const R = document.createElement('span'); R.className = 'move-arrow'; R.innerText = '▶'; R.onclick = e => { e.stopPropagation(); moveTab(tab, 1); };
+                const D = document.createElement('span'); D.className = 'move-arrow delete-tab-btn'; D.innerText = '🗑️'; D.onclick = e => { e.stopPropagation(); promptDelete(tab); };
+                btn.appendChild(L); btn.appendChild(document.createTextNode(' ' + prefix + tab + ' ')); btn.appendChild(R); btn.appendChild(D);
+            } else { btn.innerText = prefix + tab; }
+            btn.onclick = () => switchTab(tab);
+            box.appendChild(btn);
+        });
+        const addBtn = document.createElement('button'); addBtn.className = 'tab-btn btn-green-outline'; addBtn.innerText = '+ ADD GAME';
+        addBtn.onclick = () => {
+            const n = prompt('New Game Name:');
+            if (n && !tabNames.includes(n)) {
+                tabNames.push(n); tabPowerStates[n] = true;
+                localStorage.setItem('autoClaimerTabs', JSON.stringify(tabNames));
+                localStorage.setItem('matrixTabPowerStates', JSON.stringify(tabPowerStates));
+                localStorage.setItem('gameUrl_' + n, '');
+                localStorage.setItem('giftUrl_' + n, '/#/pages/person/gift_code');
+                localStorage.setItem('accountUrl_' + n, '/#/pages/person/index');
+                initData(); renderTabs(); bootAllTabs(); toggleAddId();
+            }
+        };
+        box.appendChild(addBtn);
+    }
+    function buildQuickJumperStrip() {
+        const c = document.getElementById('quickJumperBox'); c.innerHTML = '';
+        (gameData[currentTab] || []).forEach((_, idx) => {
+            const d = document.createElement('div'); d.className = 'jump-dot'; d.innerText = idx + 1;
+            d.onclick = () => { const t = document.getElementById('container-' + currentTab.replace(/\s/g,'') + '-' + idx); if (t) t.scrollIntoView({ behavior:'smooth', block:'start' }); };
+            c.appendChild(d);
+        });
+    }
+    function moveTab(tab, dir) {
+        const i = tabNames.indexOf(tab); if (i < 0) return;
+        const j = i + dir; if (j < 0 || j >= tabNames.length) return;
+        [tabNames[i], tabNames[j]] = [tabNames[j], tabNames[i]];
+        localStorage.setItem('autoClaimerTabs', JSON.stringify(tabNames)); renderTabs();
+    }
+    function promptDelete(tab) {
+        if (!confirm('Permanent delete: ' + tab + '?')) return;
+        tabNames = tabNames.filter(t => t !== tab); delete tabPowerStates[tab];
+        localStorage.setItem('autoClaimerTabs', JSON.stringify(tabNames));
+        localStorage.setItem('matrixTabPowerStates', JSON.stringify(tabPowerStates));
+        if (currentTab === tab) { currentTab = tabNames[0] || null; if (currentTab) localStorage.setItem('activeAutoClaimerTab', currentTab); }
+        initData(); renderTabs(); bootAllTabs();
+    }
+    function togglePanel() {
+        const p = document.getElementById('controlPanel'); const b = document.querySelector('.hide-panel-btn');
+        if (p.style.display === 'none') { p.style.display = 'block'; b.innerText = 'HIDE PANEL △'; }
+        else { p.style.display = 'none'; b.innerText = 'SHOW PANEL ▽'; }
+    }
+    function toggleAddId() {
+        const s = document.getElementById('addIdSection');
+        if (s.style.display === 'flex') { s.style.display = 'none'; }
+        else {
+            s.style.display = 'flex';
+            document.getElementById('gameBaseUrlInput').value    = localStorage.getItem('gameUrl_'    + currentTab) || '';
+            document.getElementById('gameGiftUrlInput').value    = localStorage.getItem('giftUrl_'    + currentTab) || '';
+            document.getElementById('gameAccountUrlInput').value = localStorage.getItem('accountUrl_' + currentTab) || '';
+            syncRouterDropdownAndBox(); buildPowerMatrixConsolePanel();
+        }
+    }
+    function buildPowerMatrixConsolePanel() {
+        const c = document.getElementById('powerMatrixControlBox'); c.innerHTML = '';
+        tabNames.forEach(tab => {
+            const row = document.createElement('div'); row.className = 'power-matrix-item';
+            const on = tabPowerStates[tab];
+            row.innerHTML = '<span>🎮 ' + tab.toUpperCase() + '</span><button class="power-switch-btn ' + (on?'active-on':'active-off') + '" onclick="toggleGamePowerLine(this,\'' + tab + '\')">' + (on?'ACTIVE (LOADED)':'MUTED (0MB RAM)') + '</button>';
+            c.appendChild(row);
+        });
+    }
+    function toggleGamePowerLine(btn, tabName) {
+        tabPowerStates[tabName] = !tabPowerStates[tabName];
+        localStorage.setItem('matrixTabPowerStates', JSON.stringify(tabPowerStates));
+        if (tabPowerStates[tabName]) { btn.className = 'power-switch-btn active-on'; btn.innerText = 'ACTIVE (LOADED)'; renderSpecificTab(tabName); }
+        else { btn.className = 'power-switch-btn active-off'; btn.innerText = 'MUTED (0MB RAM)'; const g = document.getElementById('grid-' + tabName); if (g) g.querySelectorAll('iframe').forEach(f => { f.src = 'about:blank'; }); }
+        renderTabs(); buildQuickJumperStrip();
+    }
+    function syncRouterDropdownAndBox() {
+        const sel = document.getElementById('targetGameSelector'); sel.innerHTML = '';
+        tabNames.forEach(t => { const o = document.createElement('option'); o.value = t; o.innerText = t.toUpperCase(); sel.appendChild(o); });
+        const box = document.getElementById('activeRoutesBox'); box.innerHTML = '';
+        const keys = Object.keys(channelRoutes);
+        if (!keys.length) { box.innerHTML = '<span style="color:#555;text-align:center;padding:5px;">No links mapped.</span>'; return; }
+        keys.forEach(ch => {
+            const item = document.createElement('div'); item.className = 'router-item';
+            item.innerHTML = '<span>📢 @' + ch + ' ➔ <b style="color:#ff4500;">' + channelRoutes[ch].toUpperCase() + '</b></span><span class="del-route-btn" onclick="removeChannelRoute(\'' + ch + '\')">✕</span>';
+            box.appendChild(item);
+        });
+    }
+    function addChannelRoute() {
+        const ch = document.getElementById('channelRouteInput').value.trim().toLowerCase().replace('@','');
+        const tg = document.getElementById('targetGameSelector').value;
+        if (!ch) return; channelRoutes[ch] = tg; localStorage.setItem('matrixChannelRoutes', JSON.stringify(channelRoutes));
+        document.getElementById('channelRouteInput').value = ''; syncRouterDropdownAndBox();
+    }
+    function removeChannelRoute(ch) { delete channelRoutes[ch]; localStorage.setItem('matrixChannelRoutes', JSON.stringify(channelRoutes)); syncRouterDropdownAndBox(); }
+    function resolvePathUrl(base, path) {
+        if (!path) return base; if (path.startsWith('http')) return path;
+        try { const u = new URL(base); return u.origin + path; } catch(e) { return base + path; }
+    }
+    function switchTab(t) {
+        const og = document.getElementById('grid-' + currentTab); if (og) og.classList.remove('active-matrix');
+        currentTab = t; localStorage.setItem('activeAutoClaimerTab', t);
+        const ng = document.getElementById('grid-' + t); if (ng) ng.classList.add('active-matrix');
+        renderTabs(); buildQuickJumperStrip();
+        document.getElementById('gameBaseUrlInput').value = localStorage.getItem('gameUrl_' + t) || '';
+    }
+    function toggleIframeUI(btn, cid) {
+        const c = document.getElementById(cid); if (!c) return;
+        if (c.classList.contains('ui-active')) { c.classList.remove('ui-active'); btn.innerText = 'SHOW APP UI'; }
+        else { c.classList.add('ui-active'); btn.innerText = 'BLACK MODE'; }
+    }
+    function toggleRamFreeState(btn, fid) {
+        const f = document.getElementById(fid); if (!f) return;
+        if (btn.classList.contains('ram-stripped')) { btn.classList.remove('ram-stripped'); btn.innerText = 'RAM-FREE UI'; f.contentWindow.postMessage({ cmd:'SET_RAM_MODE', state:'full' }, '*'); }
+        else { btn.classList.add('ram-stripped'); btn.innerText = 'FULL UI VIEW'; f.contentWindow.postMessage({ cmd:'SET_RAM_MODE', state:'stripped' }, '*'); }
+    }
+    function setGlobalRamFreeState(strip) {
+        tabNames.forEach(tab => {
+            const g = document.getElementById('grid-' + tab); if (!g) return;
+            g.querySelectorAll('iframe').forEach(f => { if (f.src && f.src !== 'about:blank') f.contentWindow.postMessage({ cmd:'SET_RAM_MODE', state: strip?'stripped':'full' }, '*'); });
+        });
+    }
+    function forceInPlaceReload(fid) { const f = document.getElementById(fid); if (!f) return; try { f.contentWindow.location.reload(true); } catch(e) { f.src = f.src; } }
+    function setGlobalCurtainState(black) {
+        const g = document.getElementById('grid-' + currentTab); if (!g) return;
+        g.querySelectorAll('.iframe-container').forEach(c => {
+            const b = c.querySelector('.ui-toggle-btn');
+            if (black) { c.classList.remove('ui-active'); if (b) b.innerText = 'SHOW APP UI'; }
+            else { c.classList.add('ui-active'); if (b) b.innerText = 'BLACK MODE'; }
+        });
+    }
+  function addAccounts() {
+        const raw = document.getElementById('bulkCreds').value.trim(); if (!raw) return;
+        if (!gameData[currentTab]) gameData[currentTab] = [];
+        raw.split('\n').forEach(line => {
+            const cl = line.trim(); if (!cl) return;
+            const pts = cl.split(/[\s,:]+/);
+            if (pts.length >= 2) gameData[currentTab].push({ phone: pts[0].trim(), pass: pts[1].trim() });
+        });
+        localStorage.setItem('rajaAccounts_' + currentTab, JSON.stringify(gameData[currentTab]));
+        document.getElementById('bulkCreds').value = '';
+        initData(); bootAllTabs();
+    }
+    function processManagementPanel() {
+        const b = document.getElementById('gameBaseUrlInput').value.trim();
+        const g = document.getElementById('gameGiftUrlInput').value.trim();
+        const a = document.getElementById('gameAccountUrlInput').value.trim();
+        if (b) localStorage.setItem('gameUrl_'    + currentTab, b);
+        if (g) localStorage.setItem('giftUrl_'    + currentTab, g);
+        if (a) localStorage.setItem('accountUrl_' + currentTab, a);
+        addAccounts(); initData(); bootAllTabs(); toggleAddId();
+    }
+    function bootAllTabs() {
+        const w = document.getElementById('all-grids'); w.innerHTML = '';
+        tabNames.forEach(tab => {
+            const grid = document.createElement('div');
+            grid.className = 'grid' + (tab === currentTab ? ' active-matrix' : '');
+            grid.id = 'grid-' + tab;
+            w.appendChild(grid); renderSpecificTab(tab);
+        });
+        buildQuickJumperStrip();
+    }
+    function renderSpecificTab(tabName) {
+        const grid = document.getElementById('grid-' + tabName); if (!grid) return;
+        grid.innerHTML = '';
+        const safe    = tabName.replace(/\s/g, '');
+        const baseUrl = localStorage.getItem('gameUrl_' + tabName) || '';
+        if (!gameData[tabName]) return;
+        gameData[tabName].forEach((item, index) => {
+            const container = document.createElement('div'); container.className = 'iframe-container';
+            const cid = 'container-' + safe + '-' + index; container.id = cid;
+            const fid = 'iframe-'    + safe + '-' + index;
+            let isolatedUrl = 'about:blank';
+            if (baseUrl && tabPowerStates[tabName]) {
+                const nonce = Math.floor(Math.random() * 100000);
+                const tok   = 'matrixId=' + safe + '&subId=' + index + '&userToken=' + (item.phone||'empty') + '&devNonce=' + nonce;
+                isolatedUrl = baseUrl.includes('?') ? baseUrl + '&' + tok : (function(){ const p = baseUrl.split('#'); return p[0] + '?' + tok + (p[1] ? '#' + p[1] : ''); })();
+            }
+            container.innerHTML =
+                '<div class="id-header">' +
+                '<div class="id-title">' + tabName.toUpperCase() + ' - ID ' + (index+1) + '</div>' +
+                '<div>' +
+                '<button class="ui-toggle-btn" onclick="toggleIframeUI(this,\'' + cid + '\')">SHOW APP UI</button>' +
+                '<button class="ram-toggle-btn" onclick="toggleRamFreeState(this,\'' + fid + '\')">RAM-FREE UI</button>' +
+                '<button class="refresh-single" onclick="removeAccount(\'' + tabName + '\',' + index + ')" style="background:red;margin-right:5px;">Delete</button>' +
+                '<button class="reload-inplace-btn" onclick="forceInPlaceReload(\'' + fid + '\')">Reload</button>' +
+                '<button class="refresh-single" onclick="document.getElementById(\'' + fid + '\').src=\'' + isolatedUrl + '\'">Refresh</button>' +
+                '</div></div>' +
+                '<div class="id-creds">Number : <input type="text" class="cred-input" value="' + item.phone + '" onchange="saveCred(\'' + tabName + '\',' + index + ',\'phone\',this.value)"><br>Password : <input type="text" class="cred-input" value="' + item.pass + '" onchange="saveCred(\'' + tabName + '\',' + index + ',\'pass\',this.value)"></div>' +
+                '<div class="frame-wrapper"><div class="drag-handle">SCROLL</div><div class="black-curtain"><span>⚫ BLACK PERFORMANCE ACTIVE</span><p>Claiming in background...</p></div><iframe id="' + fid + '" src="' + isolatedUrl + '"></iframe></div>';
+            grid.appendChild(container);
+            container.querySelector('iframe').addEventListener('load', function() { injectIntoFrame(this); });
+        });
+    }
+    function saveCred(tab, i, field, val) { gameData[tab][i][field] = val; localStorage.setItem('rajaAccounts_' + tab, JSON.stringify(gameData[tab])); }
+    function removeAccount(tab, i) { if (confirm('Delete this ID?')) { gameData[tab].splice(i, 1); localStorage.setItem('rajaAccounts_' + tab, JSON.stringify(gameData[tab])); bootAllTabs(); } }
+    function refreshAllCurrent() {
+        const base = localStorage.getItem('gameUrl_' + currentTab) || '';
+        document.getElementById('grid-' + currentTab).querySelectorAll('iframe').forEach((f, i) => {
+            const s = currentTab.replace(/\s/g,'');
+            f.src = base.includes('?') ? base + '&matrixId=' + s + '&subId=' + i : base + '#matrixId=' + s + '&subId=' + i;
+        });
+    }
+    function goToGiftPage() {
+        const base = localStorage.getItem('gameUrl_' + currentTab) || '';
+        const path = localStorage.getItem('giftUrl_' + currentTab) || '';
+        const full = resolvePathUrl(base, path);
+        document.getElementById('grid-' + currentTab).querySelectorAll('iframe').forEach((f, i) => {
+            const s = currentTab.replace(/\s/g,'');
+            f.src = full.includes('?') ? full + '&matrixId=' + s + '&subId=' + i : full + '#matrixId=' + s + '&subId=' + i;
+        });
+    }
+    function goToAccountPage() {
+        const base = localStorage.getItem('gameUrl_' + currentTab) || '';
+        const path = localStorage.getItem('accountUrl_' + currentTab) || '';
+        const full = resolvePathUrl(base, path);
+        document.getElementById('grid-' + currentTab).querySelectorAll('iframe').forEach((f, i) => {
+            const s = currentTab.replace(/\s/g,'');
+            f.src = full.includes('?') ? full + '&matrixId=' + s + '&subId=' + i : full + '#matrixId=' + s + '&subId=' + i;
+        });
+    }
+    function fireTargetTab(targetTab, code) {
+        if (!targetTab || !code || !tabPowerStates[targetTab]) return;
+        const base = localStorage.getItem('gameUrl_'  + targetTab) || '';
+        const path = localStorage.getItem('giftUrl_'  + targetTab) || '';
+        const full = resolvePathUrl(base, path);
+        const grid = document.getElementById('grid-'  + targetTab);
+        const s    = targetTab.replace(/\s/g,'');
+        if (grid) {
+            grid.querySelectorAll('iframe').forEach((f, i) => {
+                if (f.src && f.src !== 'about:blank') {
+                    const dynUrl = full.includes('?') ? full + '&matrixId=' + s + '&subId=' + i : full + '#matrixId=' + s + '&subId=' + i;
+                    f.contentWindow.postMessage({ cmd:'FIRE', code: code, giftUrl: dynUrl, burstScale: activeBurstMultiplierValue }, '*');
+                }
+            });
+        }
+    }
+    function fireAll() { const c = document.getElementById('masterCode').value.trim(); if (!c) return; fireTargetTab(currentTab, c); }
+    function broadcastCmd(cmd) {
+        const g = document.getElementById('grid-' + currentTab); if (!g) return;
+        g.querySelectorAll('iframe').forEach((f, i) => {
+            if (f.src && f.src !== 'about:blank') {
+                const cr = gameData[currentTab][i];
+                if (cr) f.contentWindow.postMessage({ cmd: cmd, phone: cr.phone, pass: cr.pass }, '*');
+            }
+        });
+    }
+    async function pasteCode() {
+        try {
+            const t = await navigator.clipboard.readText();
+            const m = t.match(/[A-Za-z0-9]{6,45}/);
+            document.getElementById('masterCode').value = m ? m[0] : t.trim();
+        } catch(e) {
+            const fb = prompt('Paste Code Manually:');
+            if (fb) { const m = fb.match(/[A-Za-z0-9]{6,45}/); document.getElementById('masterCode').value = m ? m[0] : fb.trim(); }
+        }
+    }
+    function clearCode() { document.getElementById('masterCode').value = ''; }
+
+    let lastFiredCode = '';
+    let autoEnabled   = true;
+    async function scanRailwayServer() {
+        if (!autoEnabled || internalLock || !RAILWAY_URL) return;
+        try {
+            const r    = await fetch(RAILWAY_URL + '/', { signal: AbortSignal.timeout(3000) });
+            const data = await r.json();
+            if (data.code && data.code !== '' && data.code !== lastFiredCode) {
+                internalLock = true; lastFiredCode = data.code;
+                let target = channelRoutes[data.channel];
+                if (!target && data.channel && data.channel.includes('fallback_engine')) {
+                    const ex = data.channel.split('_')[0];
+                    target = tabNames.find(t => t.toLowerCase() === ex);
+                }
+                if (target) fireTargetTab(target, data.code); else fireTargetTab(currentTab, data.code);
+                setTimeout(() => { internalLock = false; }, 350);
+            }
+        } catch(e) {}
+    }
+    let radarInterval = setInterval(scanRailwayServer, 50);
+    function toggleAuto() {
+        autoEnabled = !autoEnabled;
+        const btn = document.getElementById('autoBtn');
+        if (autoEnabled) {
+            btn.innerText = 'AUTO: ON';  btn.style.color = '#00c853'; btn.style.borderColor = '#00c853';
+            radarInterval = setInterval(scanRailwayServer, 50);
+        } else {
+            btn.innerText = 'AUTO: OFF'; btn.style.color = '#aaa'; btn.style.borderColor = '#444';
+            clearInterval(radarInterval);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('railwayUrlInput').value = localStorage.getItem('railwayServerUrl') || '';
+        initData(); renderTabs(); bootAllTabs(); pingServer();
+    });
+</script>
+</body>
+</html>
+  
+                                                                   </script>
